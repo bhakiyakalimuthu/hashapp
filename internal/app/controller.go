@@ -2,12 +2,13 @@ package app
 
 import (
 	"github.com/go-chi/chi"
-	chiworker "github.com/voiapp/svc-workers/chi"
 	"go.uber.org/zap"
 	"net/http"
+
+	"github.com/bhakiyakalimuthu/hashapp/pkg"
 )
 
-var _ chiworker.Controller = (*Controller)(nil)
+var _ pkg.Controller = (*Controller)(nil)
 type Controller struct {
 	logger *zap.Logger
 }
@@ -22,17 +23,14 @@ func (c *Controller) Init(logger *zap.Logger) error {
 }
 
 func (c *Controller) SetupRouter(router chi.Router) error {
-	router.Get("/", c.home)
-	if err := c.SetupRouter(router);err !=nil {
-		c.logger.Error("setup router failed in controller",zap.Error(err))
-		return err
-	}
+	router.Get("/home", c.home)
 	return nil
 }
 
 func (c *Controller) Terminate() error {
 	return nil
 }
+
 
 func (c *Controller) home(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)

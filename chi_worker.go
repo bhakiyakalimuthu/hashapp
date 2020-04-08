@@ -9,19 +9,21 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+
+	"github.com/bhakiyakalimuthu/hashapp/pkg"
 )
 
 var _ svc.Worker = (*ChiWorker)(nil)
 
 type ChiWorker struct {
-	port int
-	logger *zap.Logger
-	router chi.Router
-	controller Controller
-	server  *http.Server
+	port       int
+	logger     *zap.Logger
+	router     chi.Router
+	controller pkg.Controller
+	server     *http.Server
 }
 
-func NewWorker(ctrl Controller)  *ChiWorker {
+func NewWorker(ctrl pkg.Controller)  *ChiWorker {
 	return &ChiWorker{
 		port:       8080,
 		controller: ctrl,
@@ -40,12 +42,21 @@ func (c *ChiWorker) Init(logger *zap.Logger) error {
 			Handler:   c.router,
 		}      ,
 	}
+	if err:=c.controller.Init(c.logger);err !=nil {
+		logger.Error("failed to init controller")
+		return err
+	}
 	r := chi.NewRouter()
 	if err:= c.controller.SetupRouter(r);err !=nil {
 		logger.Error("failed to setup router")
 		return err
 	}
+	c.router.Mount("/v1", r)
 	return nil
+}
+
+func (c *ChiWorker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	c.router.ServeHTTP(rw, req)
 }
 
 func (c *ChiWorker) Run() error {
@@ -64,8 +75,9 @@ func (c *ChiWorker) Terminate() error {
 	return c.controller.Terminate()
 }
 
-type Controller interface {
-	Init(logger *zap.Logger) error
-	SetupRouter(router chi.Router) error
-	Terminate() error
+func (c *ChiWorker) Healthy() error {
+	if h, ok := c.controller.(svc.Healther);ok {
+		h.Healthy()
+	}
+	return nil
 }

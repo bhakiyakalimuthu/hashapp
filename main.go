@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/bhakiyakalimuthu/hashapp/internal/app"
 	"github.com/voi-go/svc"
-	chiworker "github.com/voiapp/svc-workers/chi"
 	"go.uber.org/zap"
 )
 
@@ -11,7 +10,9 @@ import (
 func main()  {
 	s, err := svc.New("hashapp","snap-shot")
 	svc.MustInit(s,err)
-	ctrl := app.
-	rest := chiworker.New()
+	ctrl := app.NewController(zap.L())
+	rest := NewWorker(ctrl)
+	s.AddWorker("http",rest)
+	s.Run()
 }
 
