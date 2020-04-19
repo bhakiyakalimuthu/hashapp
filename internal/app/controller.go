@@ -24,6 +24,7 @@ func (c *Controller) Init(logger *zap.Logger) error {
 
 func (c *Controller) SetupRouter(router chi.Router) error {
 	router.Get("/home", c.home)
+	router.Get("/", c.home)
 	return nil
 }
 
